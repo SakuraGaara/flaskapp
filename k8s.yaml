@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: flask-deploy
+  namespace: default
+  labels:
+    app: flask
+spec:
+  replicas: 3
+  selector: 
+    matchLabels:
+      app: flask
+  template:
+    metadata:
+      name: flask-pod
+      namespace: default
+      labels:
+        app: flask
+    spec:
+      containers:
+      - name: flask-container
+        image: sakuragaara/flaskapp:tag
+        imagePullPolicy: Never
+        ports:
+        - name: http
+          containerPort: 5000
+        livenessProbe:
+          httpGet:
+            port: 5000
+            path: /index
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 8
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: flask-service
+  labels:
+    app: flaskapp
+spec:
+  selector:
+    app: flask
+  type: NodePort
+  ports: 
+  - name: service-pod
+    port: 5000
+    targetPort: 5000
+    nodePort: 31000
